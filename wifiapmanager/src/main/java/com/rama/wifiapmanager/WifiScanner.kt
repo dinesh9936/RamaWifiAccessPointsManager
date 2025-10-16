@@ -28,23 +28,44 @@ class WifiScanner(private val context: Context) {
             return flowOf(WifiScanState.MissingPermission)
         }
 
-        return wifiScanReceiver.listenForScanResults()
-            .map { success ->
-                if (success) {
-                    val results = wifiScanManager.getResults().map {
-                        ScanResultModel(
-                            ssid = it.SSID,
-                            bssid = it.BSSID,
-                            signalLevel = it.level,
-                            frequency = it.frequency
-                        )
+        return try {
+            wifiScanReceiver.listenForScanResults()
+                .map { success ->
+                    if (success) {
+                        val results = try {
+                            wifiScanManager.getResults().map {
+                                ScanResultModel(
+                                    ssid = it.SSID,
+                                    bssid = it.BSSID,
+                                    signalLevel = it.level,
+                                    frequency = it.frequency
+                                )
+                            }
+                        } catch (e: Exception) {
+                            // Catch any unexpected error while getting results
+                            return@map WifiScanState.Error("Failed to get results: ${e.message}")
+                        }
+
+                        if (results.isNotEmpty()) {
+                            WifiScanState.Success(results)
+                        } else {
+                            WifiScanState.Error("Wi-Fi scan returned no results")
+                        }
+                    } else {
+                        WifiScanState.Error("Wi-Fi scan failed")
                     }
-                    WifiScanState.Success(results)
-                } else {
-                    WifiScanState.Error("Wi-Fi scan failed or returned no results.")
                 }
-            }
-            .onStart { wifiScanManager.startScan() }
+                .onStart {
+                    try {
+                        wifiScanManager.startScan()
+                    } catch (e: Exception) {
+                        emit(WifiScanState.Error("Failed to start scan: ${e.message}"))
+                    }
+                }
+        } catch (e: Exception) {
+            // Catch any unexpected error in the Flow itself
+            flowOf(WifiScanState.Error("Unexpected error: ${e.message}"))
+        }
     }
 
     fun stopScan() {
