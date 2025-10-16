@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    `maven-publish`
+
 }
 
 android {
@@ -32,12 +32,8 @@ android {
         jvmTarget = "11"
     }
 
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()      // optional but recommended
-            withJavadocJar()      // optional
-        }
-    }
+
+
 }
 
 dependencies {
@@ -50,31 +46,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
-val usernames = System.getenv("GITHUB_USERNAME") ?: error("GITHUB_USERNAME not set")
-val token = System.getenv("GITHUB_TOKEN") ?: error("GITHUB_TOKEN not set")
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                groupId = "com.rama"       // your library group
-                artifactId = "wifiapmanager"
-                version = "1.0.0"
 
-                from(components["release"])
-            }
-        }
-        repositories {
-            // GitHub Packages
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/dinesh9936/RamaWifiAccessPointsManager")
-                credentials {
-                    username = usernames
-                    password = token
-                }
-            }
-        }
-    }
 
-}

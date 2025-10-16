@@ -40,8 +40,9 @@ android {
 }
 
 dependencies {
-    implementation("com.rama:wifiapmanager:1.0.0")
+
     implementation(libs.androidx.core.ktx)
+    implementation(libs.ramawifiaccesspointsmanager)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
